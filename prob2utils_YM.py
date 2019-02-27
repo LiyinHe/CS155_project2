@@ -2,7 +2,6 @@
 # Authors: Fabian Boemer, Sid Murching, Suraj Nair
 
 import numpy as np
-import copy
 
 def grad_U(Ui, Yij, Vj, reg, eta):
     """
@@ -48,7 +47,9 @@ def get_err(U, V, Y, reg=0.0):
     for dPoint in Y:
         dPoint = dPoint - np.array([1, 1, 0])
         err = err + (dPoint[2] - predicts[dPoint[0], dPoint[1]]) **2 
-    return err / len(Y)
+
+    regTerm = np.sum(U**2) + np.sum(V**2)
+    return (err + reg * regTerm) / len(Y)
 
 def train_model(M, N, K, eta, reg, Y, eps=0.000001, max_epochs=300):
     """
@@ -93,11 +94,12 @@ def train_model(M, N, K, eta, reg, Y, eps=0.000001, max_epochs=300):
         if i == 0:
             d0 = iniLoss - loss
 
-        if oldLoss - loss < eps * (d0):
+        if (oldLoss - loss) < (eps * d0):
             print("early stop at {0}".format(i))
             break
 
         if i == max_epochs - 1:
             print('Normal stop at {0}'.format(max_epochs))
-    
+
+    loss = get_err(U, V, Y, 0)
     return U, V, loss
